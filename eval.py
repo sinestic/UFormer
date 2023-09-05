@@ -13,6 +13,10 @@ from dataset import *
 valid_dir = "dataset/GoPro/valid"
 
 def eval(ckpt_path):
+    """
+     @brief Evaluate UFormer model.
+     @param ckpt_path path to the model
+    """
     val_dataset = get_validation_data(valid_dir)
     val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=False,
             num_workers=1, pin_memory=True, drop_last=False)
@@ -38,6 +42,7 @@ def eval(ckpt_path):
     with torch.no_grad():
         psnr_scalar = 0
         ssim_scalar = 0
+        # This function is used to generate the PSNR SSIM and PSNR values.
         for i, data in enumerate(val_loader):
             target = data[0].to(device)
             input = data[1].to(device)
@@ -47,6 +52,7 @@ def eval(ckpt_path):
             ssim_scalar+=ssim(pred,target).item()
             print("@EPOCH {}: PSNR {:.3f}; SSIM {:.3f}; Time {:.3f}".format(psnr_scalar/(i+1),ssim_scalar/(i+1),))
 
+# checkpoint ckpt_192_7010. 46. pt
 if __name__=="__main__":
     weights = "checkpoint/ckpt_192_7010.46.pt"
     eval(weights)

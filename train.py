@@ -1,7 +1,5 @@
 
 import torch
-
-import tensorboard
 from timm.utils import NativeScaler
 from torch.utils.tensorboard import SummaryWriter
 import time
@@ -20,6 +18,9 @@ train_dir = "dataset/GoPro/train"
 valid_dir = "dataset/GoPro/valid"
 
 def train():
+    """
+     @brief Train UFormer on data stored in train_dir and validate it on valid_dir.
+    """
     train_dataset = get_training_data(train_dir)
     train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True,
             num_workers=1, pin_memory=True, drop_last=False)
@@ -44,17 +45,10 @@ def train():
     model.to(device)
     criterion = CharbonnierLoss()
     optimizer = torch.optim.AdamW(model.parameters(),1E-4,weight_decay=0.002)
-
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,EPOCHS,eta_min=1E-6)
-
-
-
     logger = SummaryWriter()
-
-
-    # %load_ext tensorboard
-    # %tensorboard --logdir=runs
     best_model_psnr=0
+    # This is the loop used to train and eval the model.
     for epoch in range(EPOCHS):
         epoch_start_time = time.time()
         train_loss = 0
@@ -84,6 +78,7 @@ def train():
                 psnr_scalar+=psnr(pred,target).item()
                 ssim_scalar+=ssim(pred,target).item()
             logger.add_scalar("Valid Loss",valid_loss,epoch)
+        # Save the model.
         if psnr_scalar>best_model_psnr:
             best_model_psnr=psnr_scalar
             model.cpu()

@@ -12,6 +12,11 @@ SIZE=256
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 def test(model,fn):
+    """
+     @brief Tests the model on an image. This is a helper function for test_fit.
+     @param model The model to test.
+     @param fn The filename of the image
+    """
     img = cv.imread(fn)
     
     h,w,c = img.shape
@@ -21,6 +26,7 @@ def test(model,fn):
     padded_img = np.empty((h+h_pad,w+w_pad,c),dtype=np.uint8)
     padded_img[:h_pad//2,:w_pad//2] = 0
     padded_img[-h_pad//2:,-w_pad//2:] = 0
+    # Pads the image with the given width and height.
     if w_pad == 0 and h_pad==0:
         padded_img = img
     elif w_pad ==0:
@@ -31,12 +37,14 @@ def test(model,fn):
         padded_img[h_pad//2:-h_pad//2,w_pad//2:-w_pad//2,:]=img
     tensor_img = transforms.ToTensor()(padded_img)
     blocks = []
+    # Divide the image in blocks of windows size (SIZE)
     for i in range((h+h_pad)//SIZE):
         for j in range((w+w_pad)//SIZE):
             blocks.append(tensor_img[:,i*SIZE:(i+1)*SIZE,j*SIZE:(j+1)*SIZE])
     blocks = torch.stack(blocks)
     deblurred = torch.empty_like(blocks).to(device)
     with torch.no_grad():
+        # This function will be called by the block manager to deblur the blocks.
         for i,block in enumerate(blocks):
             start = time.time()
             deblurred[i] = model(block.unsqueeze(0).to(device))
@@ -51,8 +59,6 @@ def test(model,fn):
     __ = cv.imwrite(out_path,ret_img.astype(np.uint8))
 
 
-
-
 if __name__=="__main__":
     img_filenames = glob.glob("test/*png")
     ckpt_path = "checkpoints/ckpt_86_7005.41.pt"
@@ -61,6 +67,7 @@ if __name__=="__main__":
     model.load_state_dict(torch.load(ckpt_path),strict=False)
     model.to(device)
     model.eval()
+    # test for each file in img_filenames
     for fn in img_filenames:
         
         test(model,fn)
