@@ -60,6 +60,10 @@ def test(model,fn):
 
 
 if __name__=="__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model|-m",dest="ckpt_path",default="checkpoints/best_model.pt",help="Path of the weight file")
+    parser.add_argument("--input|-i",dest="dir",help="Input directory where the input images are stored")
     img_filenames = glob.glob("test/*png")
     ckpt_path = "checkpoints/ckpt_86_7005.41.pt"
     torch.cuda.empty_cache()
